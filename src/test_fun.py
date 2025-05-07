@@ -1,7 +1,8 @@
-
 from transformers import AutoTokenizer, DataCollatorWithPadding
 from datasets import load_dataset
 from torch.utils.data import DataLoader
+from src.config import config
+
 
 def map_labels(example):
     label = example["label"]
@@ -15,18 +16,18 @@ def map_labels(example):
         return {"label": -1}  # handle edge case if needed
     
 
-def load_data(config):
+def load_data_for_train(config):
     tokenizer = AutoTokenizer.from_pretrained(config["checkpoint"])
     # tokenization + return dataloaders
     raw_datasets = load_dataset(
     "csv",
-    data_files={"train": "data/train.csv",
-                "validation": "data/valid.csv",
+    data_files={
                 "test": "data/test.csv"
             }
     )
 
     raw_datasets = raw_datasets.map(map_labels)
+
 
     def tk_function(batch):
         texts = []
@@ -49,10 +50,6 @@ def load_data(config):
 
         return tokenizer(texts, truncation=True, padding=True)
     
-
-    # def tk_function(example):
-    #     return tokenizer(example["statement"], truncation = True, padding = True)
-    
     tk_datasets = raw_datasets.map(tk_function, batched = True)
     data_collator = DataCollatorWithPadding(tokenizer = tokenizer)
 
@@ -63,24 +60,11 @@ def load_data(config):
     "pants_on_fire_counts", "context", "justification"])
     tk_datasets.set_format("torch")
 
-    tr_dataloader = DataLoader(
-        tk_datasets["train"], 
-        shuffle=True,
-        batch_size =config["batch_size"], 
-        collate_fn=data_collator,
-        )
-
-    eval_dataloader = DataLoader(
-        tk_datasets["validation"],
+    test_dataLoader = DataLoader(
+        tk_datasets["test"],
         batch_size = config["batch_size"],
         collate_fn=data_collator,
         )   
     
-
-    return tr_dataloader, eval_dataloader, tokenizer
-
-
-
-
-
+    return test_dataLoader
 
