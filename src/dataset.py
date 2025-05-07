@@ -15,28 +15,6 @@ def map_labels(example):
         return {"label": -1}  # handle edge case if needed
     
 
-
-# def tk_function(batch):
-#     texts = []
-#     for i in range(len(batch["statement"])):
-#         parts = [str(batch["statement"][i])]
-
-#         if "speaker" in batch and batch["speaker"][i]:
-#             parts.append(f"Speaker: {str(batch['speaker'][i])}")
-
-#         if "subject" in batch and batch["subject"][i]:
-#             parts.append(f"Subject: {str(batch['subject'][i])}")
-
-#         if "context" in batch and batch["context"][i]:
-#             parts.append(f"Context: {str(batch['context'][i])}")
-
-#         if "justification" in batch and batch["justification"][i]:
-#             parts.append(f"Justification: {str(batch['justification'][i])}")
-
-#         texts.append(" [SEP] ".join(parts))
-
-#     return tokenizer(texts, truncation=True, padding=True)
-    
 def load_data(config):
     tokenizer = AutoTokenizer.from_pretrained(config["checkpoint"])
     # tokenization + return dataloaders
@@ -50,8 +28,30 @@ def load_data(config):
 
     raw_datasets = raw_datasets.map(map_labels)
 
-    def tk_function(example):
-        return tokenizer(example["statement"], truncation = True, padding = True)
+    def tk_function(batch):
+        texts = []
+        for i in range(len(batch["statement"])):
+            parts = [str(batch["statement"][i])]
+
+            if "speaker" in batch and batch["speaker"][i]:
+                parts.append(f"Speaker: {str(batch['speaker'][i])}")
+
+            if "subject" in batch and batch["subject"][i]:
+                parts.append(f"Subject: {str(batch['subject'][i])}")
+
+            if "context" in batch and batch["context"][i]:
+                parts.append(f"Context: {str(batch['context'][i])}")
+
+            if "justification" in batch and batch["justification"][i]:
+                parts.append(f"Justification: {str(batch['justification'][i])}")
+
+            texts.append(" [SEP] ".join(parts))
+
+        return tokenizer(texts, truncation=True, padding=True)
+    
+
+    # def tk_function(example):
+    #     return tokenizer(example["statement"], truncation = True, padding = True)
     
     tk_datasets = raw_datasets.map(tk_function, batched = True)
     data_collator = DataCollatorWithPadding(tokenizer = tokenizer)

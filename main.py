@@ -34,15 +34,7 @@ if __name__ == "__main__":
 
         
         if(config["save_log"]):
-            # Log only if training was performed
-            # log_run({
-            #     "isbest": isbest,
-            #     "epoch": config["epochs"],
-            #     "train_loss": float(sum(epoch_losses) / len(epoch_losses)),
-            #     "val_loss": float(val_loss),
-            #     "accuracy": float(accuracy["accuracy"]),
-            #     "f1": float(current_f1)
-            # }, "results/runs.csv")
+
 
             log_run({
                 "isbest": isbest,
@@ -62,7 +54,18 @@ if __name__ == "__main__":
             plot_losses(epoch_losses, f"results/loss_graph/training_loss_{row_count}.png")
     else:
         # Just load and evaluate, no logging or saving
-        model = AutoModelForSequenceClassification.from_pretrained("models/best_model")
-        tokenizer = AutoTokenizer.from_pretrained("models/best_model")
+        if config["loadBestModel"]:
+            model = AutoModelForSequenceClassification.from_pretrained("models/best_model")
+            tokenizer = AutoTokenizer.from_pretrained("models/best_model")
+        else:
+            model = build_model(config)
         accuracy, f1_loss, val_loss = evaluate_model(model, eval_dataloader)
-        print(f"🔍 Evaluation only — Accuracy: {accuracy['accuracy']:.4f}, F1: {f1_loss['f1']:.4f}")
+        print(f"🔍 Evaluation only — Accuracy: {accuracy['accuracy']:.4f}, F1: {f1_loss['f1']:.4f}, validation loss: {val_loss:.4f}")
+        
+        
+        
+        
+        
+        
+        
+        
